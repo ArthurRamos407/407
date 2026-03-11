@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Publicação e Busca Absoluta</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f9; }
+        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        .busca-container { border-top: 2px solid #eee; pt: 20px; }
+        .post { border-left: 5px solid #007bff; background: #fff; padding: 15px; margin-top: 10px; border-radius: 4px; }
+        .tags { color: #007bff; font-size: 0.9em; font-weight: bold; }
+        .limpar { background-color: #dc3545; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>Nova Publicação</h2>
+        <input type="text" id="titulo" placeholder="Título da postagem">
+        <textarea id="descricao" rows="3" placeholder="Descrição completa"></textarea>
+        <input type="text" id="tags" placeholder="Palavras-chave (separe por vírgula)">
+        <button onclick="publicar()">Publicar Agora</button>
+    </div>
+
+    <div class="box busca-container">
+        <h2>Busca Absoluta</h2>
+        <input type="text" id="campoBusca" placeholder="Pesquisar termo exato..." onkeyup="buscar()">
+        <div id="resultados"></div>
+        <button class="limpar" onclick="limparTudo()">Apagar Todo o Banco</button>
+    </div>
+
+    <script>
+        // Carrega dados do localStorage ao abrir a página
+        let bancoDeDados = JSON.parse(localStorage.getItem('meusPosts')) || [];
+
+        function publicar() {
+            const t = document.getElementById('titulo').value;
+            const d = document.getElementById('descricao').value;
+            const k = document.getElementById('tags').value;
+
+            if(!t || !d) return alert("Preencha título e descrição!");
+
+            const novoPost = { titulo: t, desc: d, tags: k };
+            bancoDeDados.push(novoPost);
+            
+            // Salva permanentemente no navegador
+            localStorage.setItem('meusPosts', JSON.stringify(bancoDeDados));
+            
+            // Limpa os campos e avisa
+            document.getElementById('titulo').value = "";
+            document.getElementById('descricao').value = "";
+            document.getElementById('tags').value = "";
+            alert("Publicado com sucesso!");
+            buscar();
+        }
+
+        function buscar() {
+            const termo = document.getElementById('campoBusca').value.toLowerCase();
+            const container = document.getElementById('resultados');
+            container.innerHTML = "";
+
+            if (termo === "") return;
+
+            // Filtro Absoluto: só mostra se a palavra existir em um dos campos
+            const filtrados = bancoDeDados.filter(p => 
+                p.titulo.toLowerCase().includes(termo) || 
+                p.desc.toLowerCase().includes(termo) || 
+                p.tags.toLowerCase().includes(termo)
+            );
+
+            if (filtrados.length > 0) {
+                filtrados.forEach(p => {
+                    container.innerHTML += `
+                        <div class="post">
+                            <h3>${p.titulo}</h3>
+                            <p>${p.desc}</p>
+                            <div class="tags">Palavras-chave: ${p.tags}</div>
+                        </div>`;
+                });
+            } else {
+                container.innerHTML = "<p>Nenhum resultado literal para '" + termo + "'.</p>";
+            }
+        }
+
+        function limparTudo() {
+            if(confirm("Deseja apagar todas as publicações?")) {
+                localStorage.removeItem('meusPosts'); //
+                bancoDeDados = [];
+                buscar();
+            }
+        }
+    </script>
+</body>
+</html>
